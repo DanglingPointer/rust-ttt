@@ -1,5 +1,7 @@
 mod field;
-use crate::field::{get_winner, Field, Side};
+mod minimax;
+
+use crate::field::{get_winner, Field, Mark};
 
 fn main() {
     println!("Hello, world!");
@@ -7,8 +9,8 @@ fn main() {
     let mut f = Field::new();
     println!("after new: {:?}", f);
 
-    f.set_at(1, 1, Side::Cross).unwrap_or_default();
-    f.set_at(0, 2, Side::Nought).unwrap_or_default();
+    f.set_at(1, 1, Mark::Cross).unwrap_or_default();
+    f.set_at(0, 2, Mark::Nought).unwrap_or_default();
     println!("after setting: {:?}", f);
     println!("square at (1, 1) is: {:?}", f.get_at(1, 1));
 

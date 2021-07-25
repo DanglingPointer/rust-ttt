@@ -1,12 +1,12 @@
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
-pub enum Side {
+pub enum Mark {
     Cross,
     Nought,
 }
 
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct Field {
-    data: [[Option<Side>; Field::SIZE]; Field::SIZE],
+    data: [[Option<Mark>; Field::SIZE]; Field::SIZE],
 }
 
 impl Field {
@@ -18,11 +18,15 @@ impl Field {
         }
     }
 
-    pub fn get_at(&self, x: usize, y: usize) -> Option<Side> {
+    pub fn get_size(&self) -> usize {
+        Field::SIZE
+    }
+
+    pub fn get_at(&self, x: usize, y: usize) -> Option<Mark> {
         self.data[x][y]
     }
 
-    pub fn set_at(&mut self, x: usize, y: usize, what: Side) -> Result<(), Side> {
+    pub fn set_at(&mut self, x: usize, y: usize, what: Mark) -> Result<(), Mark> {
         let sqr = &mut self.data[x][y];
 
         match *sqr {
@@ -56,7 +60,7 @@ impl Field {
     }
 }
 
-pub fn get_winner(f: &Field) -> Option<Side> {
+pub fn get_winner(f: &Field) -> Option<Mark> {
     for col_ind in 0..Field::SIZE {
         if let Some(w) = get_col_winner(f, col_ind) {
             return Some(w);
@@ -77,7 +81,7 @@ pub fn get_winner(f: &Field) -> Option<Side> {
     None
 }
 
-fn get_col_winner(f: &Field, col_ind: usize) -> Option<Side> {
+fn get_col_winner(f: &Field, col_ind: usize) -> Option<Mark> {
     let col = &f.data[col_ind];
     let first = col[0];
     if col.iter().skip(1).all(|e| *e == first) {
@@ -86,7 +90,7 @@ fn get_col_winner(f: &Field, col_ind: usize) -> Option<Side> {
     None
 }
 
-fn get_row_winner(f: &Field, row_ind: usize) -> Option<Side> {
+fn get_row_winner(f: &Field, row_ind: usize) -> Option<Mark> {
     let first = f.data[0][row_ind];
     for col_ind in 1..Field::SIZE {
         if f.data[col_ind][row_ind] != first {
@@ -96,7 +100,7 @@ fn get_row_winner(f: &Field, row_ind: usize) -> Option<Side> {
     first
 }
 
-fn get_inc_diag_winner(f: &Field) -> Option<Side> {
+fn get_inc_diag_winner(f: &Field) -> Option<Mark> {
     let first = f.data[0][0];
     for i in 1..Field::SIZE {
         if f.data[i][i] != first {
@@ -106,7 +110,7 @@ fn get_inc_diag_winner(f: &Field) -> Option<Side> {
     first
 }
 
-fn get_mix_diag_winner(f: &Field) -> Option<Side> {
+fn get_mix_diag_winner(f: &Field) -> Option<Mark> {
     let last_ind = Field::SIZE - 1;
     let first = f.data[0][last_ind];
     for i in 1..Field::SIZE {
@@ -130,14 +134,14 @@ fn test_constructed_field_is_empty() {
 #[test]
 fn test_set_cross() {
     let mut f = Field::new();
-    f.set_at(1, 1, Side::Cross).unwrap();
-    assert_eq!(Side::Cross, f.set_at(1, 1, Side::Cross).unwrap_err());
-    assert_eq!(Side::Cross, f.set_at(1, 1, Side::Nought).unwrap_err());
+    f.set_at(1, 1, Mark::Cross).unwrap();
+    assert_eq!(Mark::Cross, f.set_at(1, 1, Mark::Cross).unwrap_err());
+    assert_eq!(Mark::Cross, f.set_at(1, 1, Mark::Nought).unwrap_err());
 
     for i in 0..Field::SIZE {
         for j in 0..Field::SIZE {
             match (i, j) {
-                (1, 1) => assert_eq!(Some(Side::Cross), f.get_at(1, 1)),
+                (1, 1) => assert_eq!(Some(Mark::Cross), f.get_at(1, 1)),
                 _ => assert_eq!(None, f.get_at(i, j)),
             }
         }
@@ -154,14 +158,14 @@ fn test_set_cross() {
 #[test]
 fn test_set_nought() {
     let mut f = Field::new();
-    f.set_at(0, 2, Side::Nought).unwrap();
-    assert_eq!(Side::Nought, f.set_at(0, 2, Side::Nought).unwrap_err());
-    assert_eq!(Side::Nought, f.set_at(0, 2, Side::Cross).unwrap_err());
+    f.set_at(0, 2, Mark::Nought).unwrap();
+    assert_eq!(Mark::Nought, f.set_at(0, 2, Mark::Nought).unwrap_err());
+    assert_eq!(Mark::Nought, f.set_at(0, 2, Mark::Cross).unwrap_err());
 
     for i in 0..Field::SIZE {
         for j in 0..Field::SIZE {
             match (i, j) {
-                (0, 2) => assert_eq!(Some(Side::Nought), f.get_at(0, 2)),
+                (0, 2) => assert_eq!(Some(Mark::Nought), f.get_at(0, 2)),
                 _ => assert_eq!(None, f.get_at(i, j)),
             }
         }
@@ -178,8 +182,8 @@ fn test_set_nought() {
 #[test]
 fn test_clear_field() {
     let mut f = Field::new();
-    f.set_at(1, 1, Side::Cross).unwrap();
-    f.set_at(0, 2, Side::Nought).unwrap();
+    f.set_at(1, 1, Mark::Cross).unwrap();
+    f.set_at(0, 2, Mark::Nought).unwrap();
     f.clear();
 
     for i in 0..Field::SIZE {
@@ -188,61 +192,61 @@ fn test_clear_field() {
         }
     }
 
-    f.set_at(1, 1, Side::Nought).unwrap();
-    f.set_at(0, 2, Side::Cross).unwrap();
+    f.set_at(1, 1, Mark::Nought).unwrap();
+    f.set_at(0, 2, Mark::Cross).unwrap();
 }
 
 #[test]
 fn test_no_winner() {
     let mut f = Field::new();
-    f.set_at(1, 1, Side::Cross).unwrap();
-    f.set_at(0, 2, Side::Nought).unwrap();
+    f.set_at(1, 1, Mark::Cross).unwrap();
+    f.set_at(0, 2, Mark::Nought).unwrap();
     assert_eq!(None, get_winner(&f));
 }
 
 #[test]
 fn test_col_winner() {
     let mut f = Field::new();
-    f.set_at(0, 0, Side::Nought).unwrap();
-    f.set_at(0, 1, Side::Nought).unwrap();
-    f.set_at(0, 2, Side::Nought).unwrap();
-    assert_eq!(Some(Side::Nought), get_winner(&f));
+    f.set_at(0, 0, Mark::Nought).unwrap();
+    f.set_at(0, 1, Mark::Nought).unwrap();
+    f.set_at(0, 2, Mark::Nought).unwrap();
+    assert_eq!(Some(Mark::Nought), get_winner(&f));
 
     f.clear();
-    f.set_at(2, 0, Side::Cross).unwrap();
-    f.set_at(2, 1, Side::Cross).unwrap();
-    f.set_at(2, 2, Side::Cross).unwrap();
-    assert_eq!(Some(Side::Cross), get_winner(&f));
+    f.set_at(2, 0, Mark::Cross).unwrap();
+    f.set_at(2, 1, Mark::Cross).unwrap();
+    f.set_at(2, 2, Mark::Cross).unwrap();
+    assert_eq!(Some(Mark::Cross), get_winner(&f));
 }
 
 #[test]
 fn test_row_winner() {
     let mut f = Field::new();
-    f.set_at(2, 2, Side::Nought).unwrap();
-    f.set_at(0, 2, Side::Nought).unwrap();
-    f.set_at(1, 2, Side::Nought).unwrap();
-    assert_eq!(Some(Side::Nought), get_winner(&f));
+    f.set_at(2, 2, Mark::Nought).unwrap();
+    f.set_at(0, 2, Mark::Nought).unwrap();
+    f.set_at(1, 2, Mark::Nought).unwrap();
+    assert_eq!(Some(Mark::Nought), get_winner(&f));
 
     f.clear();
-    f.set_at(0, 0, Side::Cross).unwrap();
-    f.set_at(1, 0, Side::Cross).unwrap();
-    f.set_at(2, 0, Side::Cross).unwrap();
-    assert_eq!(Some(Side::Cross), get_winner(&f));
+    f.set_at(0, 0, Mark::Cross).unwrap();
+    f.set_at(1, 0, Mark::Cross).unwrap();
+    f.set_at(2, 0, Mark::Cross).unwrap();
+    assert_eq!(Some(Mark::Cross), get_winner(&f));
 }
 
 #[test]
 fn test_diag_winner() {
     let mut f = Field::new();
-    f.set_at(0, 0, Side::Cross).unwrap();
-    f.set_at(1, 1, Side::Cross).unwrap();
-    f.set_at(2, 2, Side::Cross).unwrap();
-    assert_eq!(Some(Side::Cross), get_winner(&f));
+    f.set_at(0, 0, Mark::Cross).unwrap();
+    f.set_at(1, 1, Mark::Cross).unwrap();
+    f.set_at(2, 2, Mark::Cross).unwrap();
+    assert_eq!(Some(Mark::Cross), get_winner(&f));
 
     f.clear();
-    f.set_at(0, 2, Side::Nought).unwrap();
-    f.set_at(1, 1, Side::Nought).unwrap();
-    f.set_at(2, 0, Side::Nought).unwrap();
-    assert_eq!(Some(Side::Nought), get_winner(&f));
+    f.set_at(0, 2, Mark::Nought).unwrap();
+    f.set_at(1, 1, Mark::Nought).unwrap();
+    f.set_at(2, 0, Mark::Nought).unwrap();
+    assert_eq!(Some(Mark::Nought), get_winner(&f));
 }
 
 #[test]
@@ -250,7 +254,7 @@ fn test_is_full() {
     let mut f = Field::new();
     assert!(!f.is_full());
 
-    f.set_at(0, 0, Side::Cross).unwrap();
+    f.set_at(0, 0, Mark::Cross).unwrap();
     assert!(!f.is_full());
 
     for i in 0..Field::SIZE {
@@ -259,9 +263,9 @@ fn test_is_full() {
                 i,
                 j,
                 if i + j % 2 == 0 {
-                    Side::Cross
+                    Mark::Cross
                 } else {
-                    Side::Nought
+                    Mark::Nought
                 },
             )
             .unwrap_or_default();
