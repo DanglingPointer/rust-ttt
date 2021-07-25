@@ -1,28 +1,27 @@
-mod field;
+mod grid;
 mod minimax;
 
-use crate::field::{get_winner, Field, Mark};
+use crate::grid::{get_winner, Grid, Mark};
 use crate::minimax::AlphaBetaPruning;
 
 fn main() {
     println!("Hello, world!");
 
-    let mut f = Field::new(3);
-    println!("after new: {:?}", f);
+    let mut g = Grid::new(3);
+    println!("after new: {:?}", g);
 
-    f.set_at(1, 1, Mark::Cross).unwrap_or_default();
-    f.set_at(0, 2, Mark::Nought).unwrap_or_default();
-    println!("after setting: {:?}", f);
-    println!("square at (1, 1) is: {:?}", f.get_at(1, 1));
+    g.set_at(1, 1, Mark::Cross).unwrap_or_default();
+    g.set_at(0, 2, Mark::Nought).unwrap_or_default();
+    println!("after setting: {:?}", g);
+    println!("square at (1, 1) is: {:?}", g.get_at(1, 1));
 
     let engine = AlphaBetaPruning::new(Mark::Cross);
-    engine.try_make_move(&mut f);
-    println!("after AI has done its move: {:?}", f);
+    engine.try_make_move(&mut g);
+    println!("after AI has done its move: {:?}", g);
 
-    f.clear();
-    println!("after clear: {:?}", f);
-    println!("is field full? {:?}", f.is_full());
+    g.clear();
+    println!("after clear: {:?}", g);
+    println!("is grid full? {:?}", g.is_full());
 
-    println!("and the WINNER is: {:?}", get_winner(&f));
-
+    println!("and the WINNER is: {:?}", get_winner(&g));
 }
