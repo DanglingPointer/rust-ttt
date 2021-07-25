@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use crate::field::{get_winner, Field, Mark};
 use std::cmp::{max, min};
 
