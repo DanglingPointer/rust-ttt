@@ -31,7 +31,6 @@ impl AlphaBetaPruning {
             return;
         }
 
-        let field_size = field.get_size();
         let mut alpha = Outcome::Loss;
         let beta = Outcome::Win;
 
@@ -39,25 +38,18 @@ impl AlphaBetaPruning {
         let mut best_move: Option<Move> = None;
         let mut last_move: Option<Move> = None;
 
-        'outer: for x in 0..field_size {
-            for y in 0..field_size {
-                let next_move = Move {
-                    what: self.max_side,
-                    x,
-                    y,
-                };
-                if let Some(mover) = RevertingMoveMaker::from_move(field, next_move) {
-                    last_move = Some(mover.get_move());
-                    let outcome = self.minimizing_side(mover.field, alpha, beta);
-                    if outcome > best_outcome {
-                        best_outcome = outcome;
-                        best_move = Some(mover.get_move());
-                    }
-                    if best_outcome >= beta {
-                        break 'outer;
-                    }
-                    alpha = max(alpha, best_outcome);
+        for next_move in FieldIterator::new(field.get_size(), self.max_side) {
+            if let Some(mover) = RevertingMoveMaker::from_move(field, next_move) {
+                last_move = Some(mover.get_move());
+                let outcome = self.minimizing_side(mover.field, alpha, beta);
+                if outcome > best_outcome {
+                    best_outcome = outcome;
+                    best_move = Some(mover.get_move());
                 }
+                if best_outcome >= beta {
+                    break;
+                }
+                alpha = max(alpha, best_outcome);
             }
         }
 
@@ -73,24 +65,16 @@ impl AlphaBetaPruning {
             return outcome;
         }
 
-        let field_size = field.get_size();
         let mut best_outcome = Outcome::Loss; // worst outcome
 
-        'outer: for x in 0..field_size {
-            for y in 0..field_size {
-                let next_move = Move {
-                    what: self.max_side,
-                    x,
-                    y,
-                };
-                if let Some(mover) = RevertingMoveMaker::from_move(field, next_move) {
-                    let outcome = self.minimizing_side(mover.field, alpha, beta);
-                    best_outcome = max(best_outcome, outcome);
-                    if best_outcome >= beta {
-                        break 'outer;
-                    }
-                    alpha = max(alpha, best_outcome);
+        for next_move in FieldIterator::new(field.get_size(), self.max_side) {
+            if let Some(mover) = RevertingMoveMaker::from_move(field, next_move) {
+                let outcome = self.minimizing_side(mover.field, alpha, beta);
+                best_outcome = max(best_outcome, outcome);
+                if best_outcome >= beta {
+                    break;
                 }
+                alpha = max(alpha, best_outcome);
             }
         }
 
@@ -102,24 +86,16 @@ impl AlphaBetaPruning {
             return outcome;
         }
 
-        let field_size = field.get_size();
         let mut best_outcome = Outcome::Win; // worst outcome
 
-        'outer: for x in 0..field_size {
-            for y in 0..field_size {
-                let next_move = Move {
-                    what: self.min_side,
-                    x,
-                    y,
-                };
-                if let Some(mover) = RevertingMoveMaker::from_move(field, next_move) {
-                    let outcome = self.maximizing_side(mover.field, alpha, beta);
-                    best_outcome = min(best_outcome, outcome);
-                    if best_outcome <= alpha {
-                        break 'outer;
-                    }
-                    beta = min(beta, best_outcome);
+        for next_move in FieldIterator::new(field.get_size(), self.min_side) {
+            if let Some(mover) = RevertingMoveMaker::from_move(field, next_move) {
+                let outcome = self.maximizing_side(mover.field, alpha, beta);
+                best_outcome = min(best_outcome, outcome);
+                if best_outcome <= alpha {
+                    break;
                 }
+                beta = min(beta, best_outcome);
             }
         }
 
@@ -141,7 +117,7 @@ impl AlphaBetaPruning {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 struct Move {
     pub what: Mark,
     pub x: usize,
@@ -151,6 +127,43 @@ struct Move {
 trait MoveMaker<'a>: Sized {
     fn from_move(field: &'a mut Field, m: Move) -> Option<Self>;
     fn get_move(&self) -> Move;
+}
+
+/// field iterator!
+struct FieldIterator {
+    side: Mark,
+    field_size: usize,
+    end_pos: usize,
+    next_pos: usize,
+}
+
+impl FieldIterator {
+    fn new(field_size: usize, side: Mark) -> FieldIterator {
+        FieldIterator {
+            side,
+            field_size,
+            end_pos: field_size * field_size,
+            next_pos: 0,
+        }
+    }
+}
+
+impl Iterator for FieldIterator {
+    type Item = Move;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.next_pos >= self.end_pos {
+            return None;
+        }
+        let current_pos = self.next_pos;
+        self.next_pos += 1;
+
+        Some(Move {
+            what: self.side,
+            x: current_pos / self.field_size,
+            y: current_pos % self.field_size,
+        })
+    }
 }
 
 /// reverting move maker!
@@ -197,6 +210,41 @@ impl MoveMaker<'_> for PersistentMoveMaker {
     fn get_move(&self) -> Move {
         self.saved_move
     }
+}
+
+#[test]
+fn test_field_iterator() {
+    let field_size: usize = 2;
+    let expected_moves = vec![
+        Move {
+            what: Mark::Cross,
+            x: 0,
+            y: 0,
+        },
+        Move {
+            what: Mark::Cross,
+            x: 0,
+            y: 1,
+        },
+        Move {
+            what: Mark::Cross,
+            x: 1,
+            y: 0,
+        },
+        Move {
+            what: Mark::Cross,
+            x: 1,
+            y: 1,
+        },
+    ];
+
+    let mut obtained_moves = Vec::<Move>::new();
+
+    for next_move in FieldIterator::new(field_size, Mark::Cross) {
+        obtained_moves.push(next_move);
+    }
+
+    assert_eq!(expected_moves, obtained_moves);
 }
 
 #[test]
