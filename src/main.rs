@@ -6,7 +6,7 @@ use crate::field::{get_winner, Field, Mark};
 fn main() {
     println!("Hello, world!");
 
-    let mut f = Field::new();
+    let mut f = Field::new(3);
     println!("after new: {:?}", f);
 
     f.set_at(1, 1, Mark::Cross).unwrap_or_default();

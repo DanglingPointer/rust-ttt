@@ -249,7 +249,7 @@ fn test_field_iterator() {
 
 #[test]
 fn test_reverting_move_maker() {
-    let mut f = Field::new();
+    let mut f = Field::new(3);
     {
         let opt_mm = RevertingMoveMaker::from_move(
             &mut f,
@@ -268,7 +268,7 @@ fn test_reverting_move_maker() {
 
 #[test]
 fn test_persistent_move_maker() {
-    let mut f = Field::new();
+    let mut f = Field::new(3);
     {
         let opt_mm = PersistentMoveMaker::from_move(
             &mut f,
@@ -287,7 +287,7 @@ fn test_persistent_move_maker() {
 
 #[test]
 fn test_ai_wins_as_cross() {
-    let mut f = Field::new();
+    let mut f = Field::new(3);
 
     f.set_at(2, 0, Mark::Cross).unwrap();
     f.set_at(2, 2, Mark::Nought).unwrap();
@@ -314,7 +314,7 @@ fn test_ai_wins_as_cross() {
 
 #[test]
 fn test_ai_wins_as_nought() {
-    let mut f = Field::new();
+    let mut f = Field::new(3);
 
     f.set_at(1, 1, Mark::Cross).unwrap();
     f.set_at(0, 0, Mark::Nought).unwrap();
@@ -342,7 +342,7 @@ fn test_ai_wins_as_nought() {
 
 #[test]
 fn test_ai_averts_defeat_as_cross() {
-    let mut f = Field::new();
+    let mut f = Field::new(3);
 
     f.set_at(1, 1, Mark::Cross).unwrap();
     f.set_at(0, 2, Mark::Nought).unwrap();
@@ -369,7 +369,7 @@ fn test_ai_averts_defeat_as_cross() {
 
 #[test]
 fn test_ai_averts_defeat_as_nought() {
-    let mut f = Field::new();
+    let mut f = Field::new(3);
 
     f.set_at(1, 1, Mark::Cross).unwrap();
     f.set_at(0, 0, Mark::Nought).unwrap();
@@ -393,7 +393,7 @@ fn test_ai_averts_defeat_as_nought() {
 
 #[test]
 fn test_ai_tolerates_full_field() {
-    let mut f = Field::new();
+    let mut f = Field::new(3);
 
     for x in 0..f.get_size() {
         for y in 0..f.get_size() {
