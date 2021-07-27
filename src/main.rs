@@ -10,10 +10,10 @@ fn main() {
     let mut g = Grid::new(3);
     println!("after new: {:?}", g);
 
-    g.set_at(1, 1, Mark::Cross).unwrap_or_default();
-    g.set_at(0, 2, Mark::Nought).unwrap_or_default();
+    g.set_at_pos(1, 1, Mark::Cross).unwrap_or_default();
+    g.set_at_pos(0, 2, Mark::Nought).unwrap_or_default();
     println!("after setting: {:?}", g);
-    println!("square at (1, 1) is: {:?}", g.get_at(1, 1));
+    println!("square at (1, 1) is: {:?}", g.get_at_pos(1, 1));
 
     let engine = AlphaBetaPruning::new(Mark::Cross);
     engine.try_make_move(&mut g);
