@@ -8,19 +8,22 @@ fn main() {
     println!("Hello, world!");
 
     let mut g = Grid::new(3);
-    println!("after new: {:?}", g);
+    println!("after new: {}", g);
 
     g.set_at_pos(1, 1, Mark::Cross).unwrap_or_default();
     g.set_at_pos(0, 2, Mark::Nought).unwrap_or_default();
-    println!("after setting: {:?}", g);
+    println!("after setting: {}", g);
     println!("square at (1, 1) is: {:?}", g.get_at_pos(1, 1));
 
     let engine = AlphaBetaPruning::new(Mark::Cross);
     engine.try_make_move(&mut g);
-    println!("after AI has done its move: {:?}", g);
+    println!("after AI (Cross) has done its move: {}", g);
+
+    g.unset_at_pos(1, 1);
+    println!("after unsetting at (1, 1): {}", g);
 
     g.clear();
-    println!("after clear: {:?}", g);
+    println!("after clear: {}", g);
     println!("is grid full? {:?}", g.is_full());
 
     println!("and the WINNER is: {:?}", get_winner(&g));

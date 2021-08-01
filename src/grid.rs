@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum Mark {
     Cross,
@@ -63,6 +65,28 @@ impl Grid {
 
     pub fn is_full(&self) -> bool {
         self.data.iter().all(|e| e.is_some())
+    }
+}
+
+impl fmt::Display for Grid {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(formatter, "\n    ")?;
+        for col in 0..self.side_length {
+            write!(formatter, "{:^3} ", col)?;
+        }
+        for row in 0..self.side_length {
+            write!(formatter, "\n{:^3}|", row)?;
+            for col in 0..self.side_length {
+                let symbol = match self.get_at_pos(col, row) {
+                    Some(Mark::Cross) => 'X',
+                    Some(Mark::Nought) => 'O',
+                    None => ' ',
+                };
+                write!(formatter, "{:^3}|", symbol)?;
+            }
+        }
+        write!(formatter, "\n")?;
+        Ok(())
     }
 }
 
