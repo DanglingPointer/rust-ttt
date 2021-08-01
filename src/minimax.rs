@@ -1,5 +1,7 @@
 use crate::grid::{get_winner, Grid, Mark};
 use std::cmp::{max, min};
+use std::io;
+use std::io::Write;
 
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
 enum Outcome {
@@ -24,9 +26,13 @@ impl AlphaBetaPruning {
         }
     }
 
-    pub fn try_make_move(&self, grid: &mut Grid) {
+    pub fn get_ai_side(&self) -> Mark {
+        self.max_side
+    }
+
+    pub fn try_make_move(&self, grid: &mut Grid) -> bool {
         if get_winner(grid).is_some() {
-            return;
+            return false;
         }
 
         let mut alpha = Outcome::Loss;
@@ -42,8 +48,9 @@ impl AlphaBetaPruning {
                 ind,
             };
             if let Some(mover) = RevertingMoveMaker::from_move(grid, next_move) {
+                println!("\rchecking move alternative {}...", ind);
                 last_move = Some(mover.get_move());
-                let outcome = self.minimizing_side(mover.grid, alpha, beta);
+                let outcome = self.minimizing_side(mover.grid, alpha, beta, 1);
                 if outcome > best_outcome {
                     best_outcome = outcome;
                     best_move = Some(mover.get_move());
@@ -55,14 +62,25 @@ impl AlphaBetaPruning {
             }
         }
 
+        println!("\r{:<width$}", "DONE", width = grid.get_size());
         if let Some(bm) = best_move {
             PersistentMoveMaker::from_move(grid, bm);
+            true
         } else if let Some(lm) = last_move {
             PersistentMoveMaker::from_move(grid, lm);
+            true
+        } else {
+            false
         }
     }
 
-    fn maximizing_side(&self, grid: &mut Grid, mut alpha: Outcome, beta: Outcome) -> Outcome {
+    fn maximizing_side(
+        &self,
+        grid: &mut Grid,
+        mut alpha: Outcome,
+        beta: Outcome,
+        depth: usize,
+    ) -> Outcome {
         if let Some(outcome) = self.check_finished(grid) {
             return outcome;
         }
@@ -75,7 +93,8 @@ impl AlphaBetaPruning {
                 ind,
             };
             if let Some(mover) = RevertingMoveMaker::from_move(grid, next_move) {
-                let outcome = self.minimizing_side(mover.grid, alpha, beta);
+                print_dots(depth, mover.grid.get_size());
+                let outcome = self.minimizing_side(mover.grid, alpha, beta, depth + 1);
                 best_outcome = max(best_outcome, outcome);
                 if best_outcome >= beta {
                     break;
@@ -87,7 +106,13 @@ impl AlphaBetaPruning {
         best_outcome
     }
 
-    fn minimizing_side(&self, grid: &mut Grid, alpha: Outcome, mut beta: Outcome) -> Outcome {
+    fn minimizing_side(
+        &self,
+        grid: &mut Grid,
+        alpha: Outcome,
+        mut beta: Outcome,
+        depth: usize,
+    ) -> Outcome {
         if let Some(outcome) = self.check_finished(grid) {
             return outcome;
         }
@@ -100,7 +125,8 @@ impl AlphaBetaPruning {
                 ind,
             };
             if let Some(mover) = RevertingMoveMaker::from_move(grid, next_move) {
-                let outcome = self.maximizing_side(mover.grid, alpha, beta);
+                print_dots(depth, mover.grid.get_size());
+                let outcome = self.maximizing_side(mover.grid, alpha, beta, depth + 1);
                 best_outcome = min(best_outcome, outcome);
                 if best_outcome <= alpha {
                     break;
@@ -125,6 +151,15 @@ impl AlphaBetaPruning {
             None
         }
     }
+}
+
+fn print_dots(count: usize, line_width: usize) {
+    print!(
+        "\r{:<width$}",
+        String::from_utf8(vec![b'.'; count]).unwrap(),
+        width = line_width
+    );
+    io::stdout().flush().unwrap();
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
