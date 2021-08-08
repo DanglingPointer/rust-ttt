@@ -151,7 +151,7 @@ pub fn get_winner(g: &Grid) -> Option<Mark> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{Mark::*, *};
 
     #[test]
     fn test_constructed_grid_is_empty() {
@@ -167,14 +167,14 @@ mod tests {
     #[test]
     fn test_set_cross() {
         let mut g = Grid::new(3);
-        g.set_at_pos(1, 1, Mark::Cross).unwrap();
-        assert_eq!(Mark::Cross, g.set_at_pos(1, 1, Mark::Cross).unwrap_err());
-        assert_eq!(Mark::Cross, g.set_at_pos(1, 1, Mark::Nought).unwrap_err());
+        g.set_at_pos(1, 1, Cross).unwrap();
+        assert_eq!(Cross, g.set_at_pos(1, 1, Cross).unwrap_err());
+        assert_eq!(Cross, g.set_at_pos(1, 1, Nought).unwrap_err());
 
         for i in 0..g.get_side_length() {
             for j in 0..g.get_side_length() {
                 match (i, j) {
-                    (1, 1) => assert_eq!(Some(Mark::Cross), g.get_at_pos(1, 1)),
+                    (1, 1) => assert_eq!(Some(Cross), g.get_at_pos(1, 1)),
                     _ => assert_eq!(None, g.get_at_pos(i, j)),
                 }
             }
@@ -184,14 +184,14 @@ mod tests {
     #[test]
     fn test_set_nought() {
         let mut g = Grid::new(3);
-        g.set_at_pos(0, 2, Mark::Nought).unwrap();
-        assert_eq!(Mark::Nought, g.set_at_pos(0, 2, Mark::Nought).unwrap_err());
-        assert_eq!(Mark::Nought, g.set_at_pos(0, 2, Mark::Cross).unwrap_err());
+        g.set_at_pos(0, 2, Nought).unwrap();
+        assert_eq!(Nought, g.set_at_pos(0, 2, Nought).unwrap_err());
+        assert_eq!(Nought, g.set_at_pos(0, 2, Cross).unwrap_err());
 
         for i in 0..g.get_side_length() {
             for j in 0..g.get_side_length() {
                 match (i, j) {
-                    (0, 2) => assert_eq!(Some(Mark::Nought), g.get_at_pos(0, 2)),
+                    (0, 2) => assert_eq!(Some(Nought), g.get_at_pos(0, 2)),
                     _ => assert_eq!(None, g.get_at_pos(i, j)),
                 }
             }
@@ -201,54 +201,54 @@ mod tests {
     #[test]
     fn test_no_winner() {
         let mut g = Grid::new(3);
-        g.set_at_pos(1, 1, Mark::Cross).unwrap();
-        g.set_at_pos(0, 2, Mark::Nought).unwrap();
+        g.set_at_pos(1, 1, Cross).unwrap();
+        g.set_at_pos(0, 2, Nought).unwrap();
         assert_eq!(None, get_winner(&g));
     }
 
     #[test]
     fn test_col_winner() {
         let mut g = Grid::new(3);
-        g.set_at_pos(0, 0, Mark::Nought).unwrap();
-        g.set_at_pos(0, 1, Mark::Nought).unwrap();
-        g.set_at_pos(0, 2, Mark::Nought).unwrap();
-        assert_eq!(Some(Mark::Nought), get_winner(&g));
+        g.set_at_pos(0, 0, Nought).unwrap();
+        g.set_at_pos(0, 1, Nought).unwrap();
+        g.set_at_pos(0, 2, Nought).unwrap();
+        assert_eq!(Some(Nought), get_winner(&g));
 
         g = Grid::new(3);
-        g.set_at_pos(2, 0, Mark::Cross).unwrap();
-        g.set_at_pos(2, 1, Mark::Cross).unwrap();
-        g.set_at_pos(2, 2, Mark::Cross).unwrap();
-        assert_eq!(Some(Mark::Cross), get_winner(&g));
+        g.set_at_pos(2, 0, Cross).unwrap();
+        g.set_at_pos(2, 1, Cross).unwrap();
+        g.set_at_pos(2, 2, Cross).unwrap();
+        assert_eq!(Some(Cross), get_winner(&g));
     }
 
     #[test]
     fn test_row_winner() {
         let mut g = Grid::new(3);
-        g.set_at_pos(2, 2, Mark::Nought).unwrap();
-        g.set_at_pos(0, 2, Mark::Nought).unwrap();
-        g.set_at_pos(1, 2, Mark::Nought).unwrap();
-        assert_eq!(Some(Mark::Nought), get_winner(&g));
+        g.set_at_pos(2, 2, Nought).unwrap();
+        g.set_at_pos(0, 2, Nought).unwrap();
+        g.set_at_pos(1, 2, Nought).unwrap();
+        assert_eq!(Some(Nought), get_winner(&g));
 
         g = Grid::new(3);
-        g.set_at_pos(0, 0, Mark::Cross).unwrap();
-        g.set_at_pos(1, 0, Mark::Cross).unwrap();
-        g.set_at_pos(2, 0, Mark::Cross).unwrap();
-        assert_eq!(Some(Mark::Cross), get_winner(&g));
+        g.set_at_pos(0, 0, Cross).unwrap();
+        g.set_at_pos(1, 0, Cross).unwrap();
+        g.set_at_pos(2, 0, Cross).unwrap();
+        assert_eq!(Some(Cross), get_winner(&g));
     }
 
     #[test]
     fn test_diag_winner() {
         let mut g = Grid::new(3);
-        g.set_at_pos(0, 0, Mark::Cross).unwrap();
-        g.set_at_pos(1, 1, Mark::Cross).unwrap();
-        g.set_at_pos(2, 2, Mark::Cross).unwrap();
-        assert_eq!(Some(Mark::Cross), get_winner(&g));
+        g.set_at_pos(0, 0, Cross).unwrap();
+        g.set_at_pos(1, 1, Cross).unwrap();
+        g.set_at_pos(2, 2, Cross).unwrap();
+        assert_eq!(Some(Cross), get_winner(&g));
 
         g = Grid::new(3);
-        g.set_at_pos(0, 2, Mark::Nought).unwrap();
-        g.set_at_pos(1, 1, Mark::Nought).unwrap();
-        g.set_at_pos(2, 0, Mark::Nought).unwrap();
-        assert_eq!(Some(Mark::Nought), get_winner(&g));
+        g.set_at_pos(0, 2, Nought).unwrap();
+        g.set_at_pos(1, 1, Nought).unwrap();
+        g.set_at_pos(2, 0, Nought).unwrap();
+        assert_eq!(Some(Nought), get_winner(&g));
     }
 
     #[test]
@@ -256,20 +256,12 @@ mod tests {
         let mut g = Grid::new(3);
         assert!(!g.is_full());
 
-        g.set_at_pos(0, 0, Mark::Cross).unwrap();
+        g.set_at_pos(0, 0, Cross).unwrap();
         assert!(!g.is_full());
 
         for i in 0..g.get_side_length() {
             for j in 0..g.get_side_length() {
-                let _ = g.set_at_pos(
-                    i,
-                    j,
-                    if i + j % 2 == 0 {
-                        Mark::Cross
-                    } else {
-                        Mark::Nought
-                    },
-                );
+                let _ = g.set_at_pos(i, j, if i + j % 2 == 0 { Cross } else { Nought });
             }
         }
         assert!(g.is_full());

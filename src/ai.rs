@@ -1,4 +1,4 @@
-use crate::grid::{get_winner, Grid, Mark};
+use crate::grid::{self, Mark::*};
 use std::cmp::{max, min};
 use std::io;
 use std::io::Write;
@@ -11,27 +11,27 @@ enum Outcome {
 }
 
 pub struct AlphaBetaPruning {
-    max_side: Mark,
-    min_side: Mark,
+    max_side: grid::Mark,
+    min_side: grid::Mark,
 }
 
 impl AlphaBetaPruning {
-    pub fn new(ai_side: Mark) -> AlphaBetaPruning {
+    pub fn new(ai_side: grid::Mark) -> AlphaBetaPruning {
         AlphaBetaPruning {
             max_side: ai_side,
             min_side: match ai_side {
-                Mark::Nought => Mark::Cross,
-                Mark::Cross => Mark::Nought,
+                Nought => Cross,
+                Cross => Nought,
             },
         }
     }
 
-    pub fn get_ai_side(&self) -> Mark {
+    pub fn get_ai_side(&self) -> grid::Mark {
         self.max_side
     }
 
-    pub fn try_make_move(&self, grid: &mut Grid) -> bool {
-        if get_winner(grid).is_some() {
+    pub fn try_make_move(&self, grid: &mut grid::Grid) -> bool {
+        if grid::get_winner(grid).is_some() {
             return false;
         }
 
@@ -76,7 +76,7 @@ impl AlphaBetaPruning {
 
     fn maximizing_side(
         &self,
-        grid: &mut Grid,
+        grid: &mut grid::Grid,
         mut alpha: Outcome,
         beta: Outcome,
         depth: usize,
@@ -108,7 +108,7 @@ impl AlphaBetaPruning {
 
     fn minimizing_side(
         &self,
-        grid: &mut Grid,
+        grid: &mut grid::Grid,
         alpha: Outcome,
         mut beta: Outcome,
         depth: usize,
@@ -138,8 +138,8 @@ impl AlphaBetaPruning {
         best_outcome
     }
 
-    fn check_finished(&self, grid: &Grid) -> Option<Outcome> {
-        if let Some(winner) = get_winner(grid) {
+    fn check_finished(&self, grid: &grid::Grid) -> Option<Outcome> {
+        if let Some(winner) = grid::get_winner(grid) {
             if winner == self.max_side {
                 Some(Outcome::Win)
             } else {
@@ -164,23 +164,23 @@ fn print_dots(count: usize, line_width: usize) {
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct Move {
-    what: Mark,
+    what: grid::Mark,
     ind: usize,
 }
 
 pub trait MoveMaker<'a>: Sized {
-    fn from_move(grid: &'a mut Grid, m: Move) -> Option<Self>;
+    fn from_move(grid: &'a mut grid::Grid, m: Move) -> Option<Self>;
     fn get_move(&self) -> Move;
 }
 
 /// reverting move maker!
 struct RevertingMoveMaker<'a> {
-    grid: &'a mut Grid,
+    grid: &'a mut grid::Grid,
     saved_move: Move,
 }
 
 impl<'a> MoveMaker<'a> for RevertingMoveMaker<'a> {
-    fn from_move(grid: &mut Grid, m: Move) -> Option<RevertingMoveMaker> {
+    fn from_move(grid: &mut grid::Grid, m: Move) -> Option<RevertingMoveMaker> {
         match grid.set_at_ind(m.ind, m.what) {
             Ok(_) => Some(RevertingMoveMaker {
                 grid,
@@ -207,7 +207,7 @@ pub struct PersistentMoveMaker {
 }
 
 impl MoveMaker<'_> for PersistentMoveMaker {
-    fn from_move(grid: &mut Grid, m: Move) -> Option<PersistentMoveMaker> {
+    fn from_move(grid: &mut grid::Grid, m: Move) -> Option<PersistentMoveMaker> {
         match grid.set_at_ind(m.ind, m.what) {
             Ok(_) => Some(PersistentMoveMaker { saved_move: m }),
             Err(_) => None,
@@ -225,60 +225,60 @@ mod tests {
 
     #[test]
     fn test_reverting_move_maker() {
-        let mut g = Grid::new(3);
+        let mut g = grid::Grid::new(3);
         {
             let opt_mm = RevertingMoveMaker::from_move(
                 &mut g,
                 Move {
-                    what: Mark::Nought,
+                    what: Nought,
                     ind: 4,
                 },
             );
 
             let mm = opt_mm.unwrap();
-            assert_eq!(Some(Mark::Nought), mm.grid.get_at_pos(1, 1));
+            assert_eq!(Some(Nought), mm.grid.get_at_pos(1, 1));
         }
         assert!(g.get_at_pos(1, 1).is_none());
     }
 
     #[test]
     fn test_persistent_move_maker() {
-        let mut g = Grid::new(3);
+        let mut g = grid::Grid::new(3);
         {
             let opt_mm = PersistentMoveMaker::from_move(
                 &mut g,
                 Move {
-                    what: Mark::Nought,
+                    what: Nought,
                     ind: 4,
                 },
             );
 
             assert!(opt_mm.is_some());
-            assert_eq!(Some(Mark::Nought), g.get_at_pos(1, 1));
+            assert_eq!(Some(Nought), g.get_at_pos(1, 1));
         }
-        assert_eq!(Some(Mark::Nought), g.get_at_pos(1, 1));
+        assert_eq!(Some(Nought), g.get_at_pos(1, 1));
     }
 
     #[test]
     fn test_ai_wins_as_cross() {
-        let mut g = Grid::new(3);
+        let mut g = grid::Grid::new(3);
 
-        g.set_at_pos(2, 0, Mark::Cross).unwrap();
-        g.set_at_pos(2, 2, Mark::Nought).unwrap();
-        g.set_at_pos(1, 1, Mark::Cross).unwrap();
-        g.set_at_pos(1, 2, Mark::Nought).unwrap();
+        g.set_at_pos(2, 0, Cross).unwrap();
+        g.set_at_pos(2, 2, Nought).unwrap();
+        g.set_at_pos(1, 1, Cross).unwrap();
+        g.set_at_pos(1, 2, Nought).unwrap();
 
-        let engine = AlphaBetaPruning::new(Mark::Cross);
+        let engine = AlphaBetaPruning::new(Cross);
         engine.try_make_move(&mut g);
 
         for x in 0..g.get_side_length() {
             for y in 0..g.get_side_length() {
                 match (x, y) {
                     (2, 0) | (1, 1) | (0, 2) => {
-                        assert_eq!(Some(Mark::Cross), g.get_at_pos(x, y), "x={} y={}", x, y)
+                        assert_eq!(Some(Cross), g.get_at_pos(x, y), "x={} y={}", x, y)
                     }
                     (2, 2) | (1, 2) => {
-                        assert_eq!(Some(Mark::Nought), g.get_at_pos(x, y), "x={} y={}", x, y)
+                        assert_eq!(Some(Nought), g.get_at_pos(x, y), "x={} y={}", x, y)
                     }
                     _ => assert!(g.get_at_pos(x, y).is_none(), "x={} y={}", x, y),
                 }
@@ -288,25 +288,25 @@ mod tests {
 
     #[test]
     fn test_ai_wins_as_nought() {
-        let mut g = Grid::new(3);
+        let mut g = grid::Grid::new(3);
 
-        g.set_at_pos(1, 1, Mark::Cross).unwrap();
-        g.set_at_pos(0, 0, Mark::Nought).unwrap();
-        g.set_at_pos(2, 0, Mark::Cross).unwrap();
-        g.set_at_pos(0, 2, Mark::Nought).unwrap();
-        g.set_at_pos(2, 1, Mark::Cross).unwrap();
+        g.set_at_pos(1, 1, Cross).unwrap();
+        g.set_at_pos(0, 0, Nought).unwrap();
+        g.set_at_pos(2, 0, Cross).unwrap();
+        g.set_at_pos(0, 2, Nought).unwrap();
+        g.set_at_pos(2, 1, Cross).unwrap();
 
-        let engine = AlphaBetaPruning::new(Mark::Nought);
+        let engine = AlphaBetaPruning::new(Nought);
         engine.try_make_move(&mut g);
 
         for x in 0..g.get_side_length() {
             for y in 0..g.get_side_length() {
                 match (x, y) {
                     (2, 0) | (1, 1) | (2, 1) => {
-                        assert_eq!(Some(Mark::Cross), g.get_at_pos(x, y), "x={} y={}", x, y)
+                        assert_eq!(Some(Cross), g.get_at_pos(x, y), "x={} y={}", x, y)
                     }
                     (0, 0) | (0, 2) | (0, 1) => {
-                        assert_eq!(Some(Mark::Nought), g.get_at_pos(x, y), "x={} y={}", x, y)
+                        assert_eq!(Some(Nought), g.get_at_pos(x, y), "x={} y={}", x, y)
                     }
                     _ => assert!(g.get_at_pos(x, y).is_none(), "x={} y={}", x, y),
                 }
@@ -316,24 +316,24 @@ mod tests {
 
     #[test]
     fn test_ai_averts_defeat_as_cross() {
-        let mut g = Grid::new(3);
+        let mut g = grid::Grid::new(3);
 
-        g.set_at_pos(1, 1, Mark::Cross).unwrap();
-        g.set_at_pos(0, 2, Mark::Nought).unwrap();
-        g.set_at_pos(0, 0, Mark::Cross).unwrap();
-        g.set_at_pos(2, 2, Mark::Nought).unwrap();
+        g.set_at_pos(1, 1, Cross).unwrap();
+        g.set_at_pos(0, 2, Nought).unwrap();
+        g.set_at_pos(0, 0, Cross).unwrap();
+        g.set_at_pos(2, 2, Nought).unwrap();
 
-        let engine = AlphaBetaPruning::new(Mark::Cross);
+        let engine = AlphaBetaPruning::new(Cross);
         engine.try_make_move(&mut g);
 
         for x in 0..g.get_side_length() {
             for y in 0..g.get_side_length() {
                 match (x, y) {
                     (0, 0) | (1, 1) | (1, 2) => {
-                        assert_eq!(Some(Mark::Cross), g.get_at_pos(x, y), "x={} y={}", x, y)
+                        assert_eq!(Some(Cross), g.get_at_pos(x, y), "x={} y={}", x, y)
                     }
                     (0, 2) | (2, 2) => {
-                        assert_eq!(Some(Mark::Nought), g.get_at_pos(x, y), "x={} y={}", x, y)
+                        assert_eq!(Some(Nought), g.get_at_pos(x, y), "x={} y={}", x, y)
                     }
                     _ => assert!(g.get_at_pos(x, y).is_none(), "x={} y={}", x, y),
                 }
@@ -343,23 +343,23 @@ mod tests {
 
     #[test]
     fn test_ai_averts_defeat_as_nought() {
-        let mut g = Grid::new(3);
+        let mut g = grid::Grid::new(3);
 
-        g.set_at_pos(1, 1, Mark::Cross).unwrap();
-        g.set_at_pos(0, 0, Mark::Nought).unwrap();
-        g.set_at_pos(2, 0, Mark::Cross).unwrap();
+        g.set_at_pos(1, 1, Cross).unwrap();
+        g.set_at_pos(0, 0, Nought).unwrap();
+        g.set_at_pos(2, 0, Cross).unwrap();
 
-        let engine = AlphaBetaPruning::new(Mark::Nought);
+        let engine = AlphaBetaPruning::new(Nought);
         engine.try_make_move(&mut g);
 
         for x in 0..g.get_side_length() {
             for y in 0..g.get_side_length() {
                 match (x, y) {
                     (2, 0) | (1, 1) => {
-                        assert_eq!(Some(Mark::Cross), g.get_at_pos(x, y), "x={} y={}", x, y)
+                        assert_eq!(Some(Cross), g.get_at_pos(x, y), "x={} y={}", x, y)
                     }
                     (0, 0) | (0, 2) => {
-                        assert_eq!(Some(Mark::Nought), g.get_at_pos(x, y), "x={} y={}", x, y)
+                        assert_eq!(Some(Nought), g.get_at_pos(x, y), "x={} y={}", x, y)
                     }
                     _ => assert!(g.get_at_pos(x, y).is_none(), "x={} y={}", x, y),
                 }
@@ -369,20 +369,20 @@ mod tests {
 
     #[test]
     fn test_ai_tolerates_full_grid() {
-        let mut g = Grid::new(3);
+        let mut g = grid::Grid::new(3);
 
         for x in 0..g.get_side_length() {
             for y in 0..g.get_side_length() {
-                g.set_at_pos(x, y, Mark::Cross).unwrap();
+                g.set_at_pos(x, y, Cross).unwrap();
             }
         }
 
-        let engine = AlphaBetaPruning::new(Mark::Nought);
+        let engine = AlphaBetaPruning::new(Nought);
         engine.try_make_move(&mut g);
 
         for x in 0..g.get_side_length() {
             for y in 0..g.get_side_length() {
-                assert_eq!(Some(Mark::Cross), g.get_at_pos(x, y));
+                assert_eq!(Some(Cross), g.get_at_pos(x, y));
             }
         }
     }

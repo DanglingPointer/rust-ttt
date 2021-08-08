@@ -1,5 +1,5 @@
+use crate::ai;
 use crate::grid::{get_winner, Grid, Mark};
-use crate::minimax::AlphaBetaPruning;
 use std::io;
 use std::thread::sleep;
 use std::time::Duration;
@@ -56,7 +56,7 @@ impl GameState for StartupStateData {
 
 pub struct PlayerTurnStateData {
     grid: Grid,
-    engine: AlphaBetaPruning,
+    engine: ai::AlphaBetaPruning,
 }
 
 impl GameState for PlayerTurnStateData {
@@ -87,7 +87,7 @@ impl GameState for PlayerTurnStateData {
 
 pub struct AiTurnStateData {
     grid: Grid,
-    engine: AlphaBetaPruning,
+    engine: ai::AlphaBetaPruning,
 }
 
 impl GameState for AiTurnStateData {
@@ -105,7 +105,7 @@ impl GameState for AiTurnStateData {
 
 pub struct OutcomeCheckStateData {
     grid: Grid,
-    engine: AlphaBetaPruning,
+    engine: ai::AlphaBetaPruning,
 }
 
 impl GameState for OutcomeCheckStateData {
@@ -125,7 +125,7 @@ impl GameState for OutcomeCheckStateData {
     }
 }
 
-fn create_new_game() -> io::Result<(Grid, AlphaBetaPruning)> {
+fn create_new_game() -> io::Result<(Grid, ai::AlphaBetaPruning)> {
     const MAX_GRID_SIZE: usize = 50;
     println!("\nWelcome to Tic-Tac-Toe 🙃");
 
@@ -172,7 +172,7 @@ fn create_new_game() -> io::Result<(Grid, AlphaBetaPruning)> {
     let ai_side = ai_side_prompt()?;
     println!("AI side is {:?}", ai_side);
 
-    Ok((Grid::new(grid_size), AlphaBetaPruning::new(ai_side)))
+    Ok((Grid::new(grid_size), ai::AlphaBetaPruning::new(ai_side)))
 }
 
 fn make_player_move(grid: &mut Grid, player_side: Mark) -> io::Result<()> {
