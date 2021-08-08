@@ -162,13 +162,13 @@ fn print_dots(count: usize, line_width: usize) {
     io::stdout().flush().unwrap();
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
-pub struct Move {
+#[derive(Copy, Clone, Eq, PartialEq)]
+struct Move {
     what: grid::Mark,
     ind: usize,
 }
 
-pub trait MoveMaker<'a>: Sized {
+trait MoveMaker<'a>: Sized {
     fn from_move(grid: &'a mut grid::Grid, m: Move) -> Option<Self>;
     fn get_move(&self) -> Move;
 }
@@ -202,7 +202,7 @@ impl Drop for RevertingMoveMaker<'_> {
 }
 
 /// persistent move maker!
-pub struct PersistentMoveMaker {
+struct PersistentMoveMaker {
     saved_move: Move,
 }
 
