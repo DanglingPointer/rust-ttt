@@ -157,15 +157,13 @@ fn create_new_game() -> io::Result<(Grid, ai::AlphaBetaPruning)> {
         let side_str = {
             let mut side_str = String::new();
             io::stdin().read_line(&mut side_str)?;
-            side_str.trim().to_uppercase()
+            side_str
         };
 
-        if side_str == "X" {
-            Ok(Mark::Nought)
-        } else if side_str == "O" {
-            Ok(Mark::Cross)
-        } else {
-            Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid side"))
+        match side_str.trim() {
+            "X" | "x" => Ok(Mark::Nought),
+            "O" | "o" => Ok(Mark::Cross),
+            _ => Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid side")),
         }
     }
 
@@ -234,17 +232,16 @@ fn should_continue() -> bool {
         let answer = {
             let mut answer = String::new();
             io::stdin().read_line(&mut answer)?;
-            answer.to_uppercase()
+            answer
         };
-        if answer.trim() == "Y" {
-            Ok(true)
-        } else if answer.trim() == "N" {
-            Ok(false)
-        } else {
-            Err(io::Error::new(
+
+        match answer.trim() {
+            "Y" | "y" => Ok(true),
+            "N" | "n" => Ok(false),
+            _ => Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "Inappropriate answer",
-            ))
+            )),
         }
     }
     loop {
